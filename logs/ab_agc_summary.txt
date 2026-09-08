@@ -1,0 +1,21 @@
+04:32:54 run 1: noagc (yaml/test_nowifi_sweep.yaml)
+INFO OTA successful
+04:36:39 started: I coded-only 400/400 repeat
+sweep done
+I coded-only 400/400 repeat          300s  A4:C1:38:4A:E8:8C: 119 reports =  23.8/min =   99%   (all Coded advertisers: 119)
+04:43:44 run 2: agc (yaml/test_nowifi_sweep_agc.yaml)
+INFO OTA successful
+04:47:02 started: I coded-only 400/400 repeat
+sweep done
+I coded-only 400/400 repeat          301s  A4:C1:38:4A:E8:8C: 121 reports =  24.1/min =  100%   (all Coded advertisers: 121)
+04:54:06 run 3: noagc (yaml/test_nowifi_sweep.yaml)
+INFO OTA successful
+04:57:36 started: I coded-only 400/400 repeat
+sweep done
+I coded-only 400/400 repeat          300s  A4:C1:38:4A:E8:8C: 118 reports =  23.6/min =   98%   (all Coded advertisers: 118)
+05:04:40 run 4: agc (yaml/test_nowifi_sweep_agc.yaml)
+INFO OTA successful
+05:07:57 started: I coded-only 400/400 repeat
+sweep done
+I coded-only 400/400 repeat          300s  A4:C1:38:4A:E8:8C: 126 reports =  25.2/min =  105%   (all Coded advertisers: 126)
+AB DONE 05:15:02

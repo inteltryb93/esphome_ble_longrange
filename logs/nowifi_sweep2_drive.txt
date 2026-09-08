@@ -1,0 +1,133 @@
+192.168.0.102: Connection error occurred: Error connecting to [AddrInfo(family=<AddressFamily.AF_INET: 2>, type=<SocketKind.SOCK_STREAM: 1>, proto=6, sockaddr=IPv4Sockaddr(address='192.168.0.102', port=6053))]: [Errno 113] Connect call failed ('192.168.0.102', 6053)
+192.168.0.102: Connection error occurred: Error connecting to [AddrInfo(family=<AddressFamily.AF_INET: 2>, type=<SocketKind.SOCK_STREAM: 1>, proto=6, sockaddr=IPv4Sockaddr(address='192.168.0.102', port=6053))]: [Errno 113] Connect call failed ('192.168.0.102', 6053)
+192.168.0.102: Connection error occurred: Error connecting to [AddrInfo(family=<AddressFamily.AF_INET: 2>, type=<SocketKind.SOCK_STREAM: 1>, proto=6, sockaddr=IPv4Sockaddr(address='192.168.0.102', port=6053))]: [Errno 113] Connect call failed ('192.168.0.102', 6053)
+192.168.0.102: Connection error occurred: Error connecting to [AddrInfo(family=<AddressFamily.AF_INET: 2>, type=<SocketKind.SOCK_STREAM: 1>, proto=6, sockaddr=IPv4Sockaddr(address='192.168.0.102', port=6053))]: [Errno 113] Connect call failed ('192.168.0.102', 6053)
+192.168.0.102: Connection error occurred: Error connecting to [AddrInfo(family=<AddressFamily.AF_INET: 2>, type=<SocketKind.SOCK_STREAM: 1>, proto=6, sockaddr=IPv4Sockaddr(address='192.168.0.102', port=6053))]: [Errno 113] Connect call failed ('192.168.0.102', 6053)
+192.168.0.102: Connection error occurred: Error connecting to [AddrInfo(family=<AddressFamily.AF_INET: 2>, type=<SocketKind.SOCK_STREAM: 1>, proto=6, sockaddr=IPv4Sockaddr(address='192.168.0.102', port=6053))]: [Errno 113] Connect call failed ('192.168.0.102', 6053)
+192.168.0.102: Connection error occurred: Error connecting to [AddrInfo(family=<AddressFamily.AF_INET: 2>, type=<SocketKind.SOCK_STREAM: 1>, proto=6, sockaddr=IPv4Sockaddr(address='192.168.0.102', port=6053))]: [Errno 113] Connect call failed ('192.168.0.102', 6053)
+192.168.0.102: Connection error occurred: Error connecting to [AddrInfo(family=<AddressFamily.AF_INET: 2>, type=<SocketKind.SOCK_STREAM: 1>, proto=6, sockaddr=IPv4Sockaddr(address='192.168.0.102', port=6053))]: [Errno 113] Connect call failed ('192.168.0.102', 6053)
+192.168.0.102: Connection error occurred: Error connecting to [AddrInfo(family=<AddressFamily.AF_INET: 2>, type=<SocketKind.SOCK_STREAM: 1>, proto=6, sockaddr=IPv4Sockaddr(address='192.168.0.102', port=6053))]: [Errno 113] Connect call failed ('192.168.0.102', 6053)
+192.168.0.102: Connection error occurred: Error connecting to [AddrInfo(family=<AddressFamily.AF_INET: 2>, type=<SocketKind.SOCK_STREAM: 1>, proto=6, sockaddr=IPv4Sockaddr(address='192.168.0.102', port=6053))]: [Errno 113] Connect call failed ('192.168.0.102', 6053)
+192.168.0.102: Connection error occurred: Error connecting to [AddrInfo(family=<AddressFamily.AF_INET: 2>, type=<SocketKind.SOCK_STREAM: 1>, proto=6, sockaddr=IPv4Sockaddr(address='192.168.0.102', port=6053))]: [Errno 113] Connect call failed ('192.168.0.102', 6053)
+192.168.0.102: Connection error occurred: Error connecting to [AddrInfo(family=<AddressFamily.AF_INET: 2>, type=<SocketKind.SOCK_STREAM: 1>, proto=6, sockaddr=IPv4Sockaddr(address='192.168.0.102', port=6053))]: [Errno 113] Connect call failed ('192.168.0.102', 6053)
+192.168.0.102: Connection error occurred: Error connecting to [AddrInfo(family=<AddressFamily.AF_INET: 2>, type=<SocketKind.SOCK_STREAM: 1>, proto=6, sockaddr=IPv4Sockaddr(address='192.168.0.102', port=6053))]: [Errno 113] Connect call failed ('192.168.0.102', 6053)
+192.168.0.102: Connection error occurred: Error connecting to [AddrInfo(family=<AddressFamily.AF_INET: 2>, type=<SocketKind.SOCK_STREAM: 1>, proto=6, sockaddr=IPv4Sockaddr(address='192.168.0.102', port=6053))]: [Errno 113] Connect call failed ('192.168.0.102', 6053)
+192.168.0.102: Connection error occurred: Error connecting to [AddrInfo(family=<AddressFamily.AF_INET: 2>, type=<SocketKind.SOCK_STREAM: 1>, proto=6, sockaddr=IPv4Sockaddr(address='192.168.0.102', port=6053))]: [Errno 113] Connect call failed ('192.168.0.102', 6053)
+192.168.0.102: Connection error occurred: Error connecting to [AddrInfo(family=<AddressFamily.AF_INET: 2>, type=<SocketKind.SOCK_STREAM: 1>, proto=6, sockaddr=IPv4Sockaddr(address='192.168.0.102', port=6053))]: [Errno 113] Connect call failed ('192.168.0.102', 6053)
+192.168.0.102: Connection error occurred: Error connecting to [AddrInfo(family=<AddressFamily.AF_INET: 2>, type=<SocketKind.SOCK_STREAM: 1>, proto=6, sockaddr=IPv4Sockaddr(address='192.168.0.102', port=6053))]: [Errno 113] Connect call failed ('192.168.0.102', 6053)
+192.168.0.102: Connection error occurred: Error connecting to [AddrInfo(family=<AddressFamily.AF_INET: 2>, type=<SocketKind.SOCK_STREAM: 1>, proto=6, sockaddr=IPv4Sockaddr(address='192.168.0.102', port=6053))]: [Errno 113] Connect call failed ('192.168.0.102', 6053)
+192.168.0.102: Connection error occurred: Error connecting to [AddrInfo(family=<AddressFamily.AF_INET: 2>, type=<SocketKind.SOCK_STREAM: 1>, proto=6, sockaddr=IPv4Sockaddr(address='192.168.0.102', port=6053))]: [Errno 113] Connect call failed ('192.168.0.102', 6053)
+192.168.0.102: Connection error occurred: Error connecting to [AddrInfo(family=<AddressFamily.AF_INET: 2>, type=<SocketKind.SOCK_STREAM: 1>, proto=6, sockaddr=IPv4Sockaddr(address='192.168.0.102', port=6053))]: [Errno 113] Connect call failed ('192.168.0.102', 6053)
+192.168.0.102: Connection error occurred: Error connecting to [AddrInfo(family=<AddressFamily.AF_INET: 2>, type=<SocketKind.SOCK_STREAM: 1>, proto=6, sockaddr=IPv4Sockaddr(address='192.168.0.102', port=6053))]: [Errno 113] Connect call failed ('192.168.0.102', 6053)
+192.168.0.102: Connection error occurred: Error connecting to [AddrInfo(family=<AddressFamily.AF_INET: 2>, type=<SocketKind.SOCK_STREAM: 1>, proto=6, sockaddr=IPv4Sockaddr(address='192.168.0.102', port=6053))]: [Errno 113] Connect call failed ('192.168.0.102', 6053)
+192.168.0.102: Connection error occurred: Error connecting to [AddrInfo(family=<AddressFamily.AF_INET: 2>, type=<SocketKind.SOCK_STREAM: 1>, proto=6, sockaddr=IPv4Sockaddr(address='192.168.0.102', port=6053))]: [Errno 113] Connect call failed ('192.168.0.102', 6053)
+192.168.0.102: Connection error occurred: Error connecting to [AddrInfo(family=<AddressFamily.AF_INET: 2>, type=<SocketKind.SOCK_STREAM: 1>, proto=6, sockaddr=IPv4Sockaddr(address='192.168.0.102', port=6053))]: [Errno 113] Connect call failed ('192.168.0.102', 6053)
+192.168.0.102: Connection error occurred: Error connecting to [AddrInfo(family=<AddressFamily.AF_INET: 2>, type=<SocketKind.SOCK_STREAM: 1>, proto=6, sockaddr=IPv4Sockaddr(address='192.168.0.102', port=6053))]: [Errno 113] Connect call failed ('192.168.0.102', 6053)
+192.168.0.102: Connection error occurred: Error connecting to [AddrInfo(family=<AddressFamily.AF_INET: 2>, type=<SocketKind.SOCK_STREAM: 1>, proto=6, sockaddr=IPv4Sockaddr(address='192.168.0.102', port=6053))]: [Errno 113] Connect call failed ('192.168.0.102', 6053)
+192.168.0.102: Connection error occurred: Error connecting to [AddrInfo(family=<AddressFamily.AF_INET: 2>, type=<SocketKind.SOCK_STREAM: 1>, proto=6, sockaddr=IPv4Sockaddr(address='192.168.0.102', port=6053))]: [Errno 113] Connect call failed ('192.168.0.102', 6053)
+192.168.0.102: Connection error occurred: Error connecting to [AddrInfo(family=<AddressFamily.AF_INET: 2>, type=<SocketKind.SOCK_STREAM: 1>, proto=6, sockaddr=IPv4Sockaddr(address='192.168.0.102', port=6053))]: [Errno 113] Connect call failed ('192.168.0.102', 6053)
+192.168.0.102: Connection error occurred: Error connecting to [AddrInfo(family=<AddressFamily.AF_INET: 2>, type=<SocketKind.SOCK_STREAM: 1>, proto=6, sockaddr=IPv4Sockaddr(address='192.168.0.102', port=6053))]: [Errno 113] Connect call failed ('192.168.0.102', 6053)
+192.168.0.102: Connection error occurred: Error connecting to [AddrInfo(family=<AddressFamily.AF_INET: 2>, type=<SocketKind.SOCK_STREAM: 1>, proto=6, sockaddr=IPv4Sockaddr(address='192.168.0.102', port=6053))]: [Errno 113] Connect call failed ('192.168.0.102', 6053)
+192.168.0.102: Connection error occurred: Error connecting to [AddrInfo(family=<AddressFamily.AF_INET: 2>, type=<SocketKind.SOCK_STREAM: 1>, proto=6, sockaddr=IPv4Sockaddr(address='192.168.0.102', port=6053))]: [Errno 113] Connect call failed ('192.168.0.102', 6053)
+03:37:18 started: G coded-only 200/200
+bluetooth-proxy-lr @ 192.168.0.102: disconnect request failed
+Traceback (most recent call last):
+  File "aioesphomeapi/connection.py", line 1065, in aioesphomeapi.connection.APIConnection.send_messages_await_response_complex
+    await fut
+TimeoutError
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "aioesphomeapi/connection.py", line 1353, in aioesphomeapi.connection.APIConnection.disconnect
+  File "aioesphomeapi/connection.py", line 1082, in send_message_await_response
+    [response] = await self.send_messages_await_response_complex(
+  File "aioesphomeapi/connection.py", line 1070, in send_messages_await_response_complex
+    raise TimeoutAPIError(msg) from err
+aioesphomeapi.core.TimeoutAPIError: Timeout waiting for DisconnectResponse after 10.0s
+03:43:18 started: H coded-only 300/300
+bluetooth-proxy-lr @ 192.168.0.102: disconnect request failed
+Traceback (most recent call last):
+  File "aioesphomeapi/connection.py", line 1065, in aioesphomeapi.connection.APIConnection.send_messages_await_response_complex
+    await fut
+TimeoutError
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "aioesphomeapi/connection.py", line 1353, in aioesphomeapi.connection.APIConnection.disconnect
+    await self.send_message_await_response(
+  File "aioesphomeapi/connection.py", line 1082, in send_message_await_response
+    [response] = await self.send_messages_await_response_complex(
+  File "aioesphomeapi/connection.py", line 1070, in send_messages_await_response_complex
+    raise TimeoutAPIError(msg) from err
+aioesphomeapi.core.TimeoutAPIError: Timeout waiting for DisconnectResponse after 10.0s
+03:49:18 started: I coded-only 400/400 repeat
+bluetooth-proxy-lr @ 192.168.0.102: disconnect request failed
+Traceback (most recent call last):
+  File "aioesphomeapi/connection.py", line 1065, in aioesphomeapi.connection.APIConnection.send_messages_await_response_complex
+    await fut
+TimeoutError
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "aioesphomeapi/connection.py", line 1353, in aioesphomeapi.connection.APIConnection.disconnect
+    await self.send_message_await_response(
+  File "aioesphomeapi/connection.py", line 1082, in send_message_await_response
+    [response] = await self.send_messages_await_response_complex(
+  File "aioesphomeapi/connection.py", line 1070, in send_messages_await_response_complex
+    raise TimeoutAPIError(msg) from err
+aioesphomeapi.core.TimeoutAPIError: Timeout waiting for DisconnectResponse after 10.0s
+03:55:19 started: J coded-only 500/500
+bluetooth-proxy-lr @ 192.168.0.102: disconnect request failed
+Traceback (most recent call last):
+  File "aioesphomeapi/connection.py", line 1065, in aioesphomeapi.connection.APIConnection.send_messages_await_response_complex
+    await fut
+TimeoutError
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "aioesphomeapi/connection.py", line 1353, in aioesphomeapi.connection.APIConnection.disconnect
+    await self.send_message_await_response(
+  File "aioesphomeapi/connection.py", line 1082, in send_message_await_response
+    [response] = await self.send_messages_await_response_complex(
+  File "aioesphomeapi/connection.py", line 1070, in send_messages_await_response_complex
+    raise TimeoutAPIError(msg) from err
+aioesphomeapi.core.TimeoutAPIError: Timeout waiting for DisconnectResponse after 10.0s
+04:01:19 started: K coded-only 600/600
+bluetooth-proxy-lr @ 192.168.0.102: disconnect request failed
+Traceback (most recent call last):
+  File "aioesphomeapi/connection.py", line 1065, in aioesphomeapi.connection.APIConnection.send_messages_await_response_complex
+    await fut
+TimeoutError
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "aioesphomeapi/connection.py", line 1353, in aioesphomeapi.connection.APIConnection.disconnect
+    await self.send_message_await_response(
+  File "aioesphomeapi/connection.py", line 1082, in send_message_await_response
+    [response] = await self.send_messages_await_response_complex(
+  File "aioesphomeapi/connection.py", line 1070, in send_messages_await_response_complex
+    raise TimeoutAPIError(msg) from err
+aioesphomeapi.core.TimeoutAPIError: Timeout waiting for DisconnectResponse after 10.0s
+04:07:19 started: L both 1M400/20act coded400/380
+bluetooth-proxy-lr @ 192.168.0.102: disconnect request failed
+Traceback (most recent call last):
+  File "aioesphomeapi/connection.py", line 1065, in aioesphomeapi.connection.APIConnection.send_messages_await_response_complex
+    await fut
+TimeoutError
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "aioesphomeapi/connection.py", line 1353, in aioesphomeapi.connection.APIConnection.disconnect
+    await self.send_message_await_response(
+  File "aioesphomeapi/connection.py", line 1082, in send_message_await_response
+    [response] = await self.send_messages_await_response_complex(
+  File "aioesphomeapi/connection.py", line 1070, in send_messages_await_response_complex
+    raise TimeoutAPIError(msg) from err
+aioesphomeapi.core.TimeoutAPIError: Timeout waiting for DisconnectResponse after 10.0s
+sweep done

@@ -1,0 +1,17 @@
+0: coded only 100/95                          coded=  5.7/min (3 samples) 1M=   0.0/min heap=99176
+1: coded only 400/400                         coded=  6.0/min (3 samples) 1M=   0.0/min heap=99160
+2: coded only 100/100                         coded=  7.0/min (3 samples) 1M=   0.0/min heap=99160
+3: coded only 30/30                           coded=  8.3/min (3 samples) 1M=   0.0/min heap=99160
+4: coded only 100/95, coex BT                 coded=  6.3/min (3 samples) 1M=   0.0/min heap=99160
+5: coded only 1000/1000                       coded=  7.0/min (3 samples) 1M=   0.0/min heap=99160
+6: both: 1M 400/30, coded 100/95              coded=  5.3/min (3 samples) 1M=  40.0/min heap=99117
+7: coded only 50/50                           coded=  5.3/min (3 samples) 1M=   0.0/min heap=99160
+==== summary ====
+0: coded only 100/95                          coded=  5.7/min (3 samples) 1M=   0.0/min heap=99176
+1: coded only 400/400                         coded=  6.0/min (3 samples) 1M=   0.0/min heap=99160
+2: coded only 100/100                         coded=  7.0/min (3 samples) 1M=   0.0/min heap=99160
+3: coded only 30/30                           coded=  8.3/min (3 samples) 1M=   0.0/min heap=99160
+4: coded only 100/95, coex BT                 coded=  6.3/min (3 samples) 1M=   0.0/min heap=99160
+5: coded only 1000/1000                       coded=  7.0/min (3 samples) 1M=   0.0/min heap=99160
+6: both: 1M 400/30, coded 100/95              coded=  5.3/min (3 samples) 1M=  40.0/min heap=99117
+7: coded only 50/50                           coded=  5.3/min (3 samples) 1M=   0.0/min heap=99160

@@ -1,0 +1,51 @@
+04:14:25 started: I coded-only 400/400 repeat
+bluetooth-proxy-lr @ 192.168.0.102: disconnect request failed
+Traceback (most recent call last):
+  File "aioesphomeapi/connection.py", line 1065, in aioesphomeapi.connection.APIConnection.send_messages_await_response_complex
+    await fut
+TimeoutError
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "aioesphomeapi/connection.py", line 1353, in aioesphomeapi.connection.APIConnection.disconnect
+  File "aioesphomeapi/connection.py", line 1082, in send_message_await_response
+    [response] = await self.send_messages_await_response_complex(
+  File "aioesphomeapi/connection.py", line 1070, in send_messages_await_response_complex
+    raise TimeoutAPIError(msg) from err
+aioesphomeapi.core.TimeoutAPIError: Timeout waiting for DisconnectResponse after 10.0s
+04:20:26 started: I coded-only 400/400 repeat
+bluetooth-proxy-lr @ 192.168.0.102: disconnect request failed
+Traceback (most recent call last):
+  File "aioesphomeapi/connection.py", line 1065, in aioesphomeapi.connection.APIConnection.send_messages_await_response_complex
+    await fut
+TimeoutError
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "aioesphomeapi/connection.py", line 1353, in aioesphomeapi.connection.APIConnection.disconnect
+    await self.send_message_await_response(
+  File "aioesphomeapi/connection.py", line 1082, in send_message_await_response
+    [response] = await self.send_messages_await_response_complex(
+  File "aioesphomeapi/connection.py", line 1070, in send_messages_await_response_complex
+    raise TimeoutAPIError(msg) from err
+aioesphomeapi.core.TimeoutAPIError: Timeout waiting for DisconnectResponse after 10.0s
+04:26:26 started: H coded-only 300/300
+bluetooth-proxy-lr @ 192.168.0.102: disconnect request failed
+Traceback (most recent call last):
+  File "aioesphomeapi/connection.py", line 1065, in aioesphomeapi.connection.APIConnection.send_messages_await_response_complex
+    await fut
+TimeoutError
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "aioesphomeapi/connection.py", line 1353, in aioesphomeapi.connection.APIConnection.disconnect
+    await self.send_message_await_response(
+  File "aioesphomeapi/connection.py", line 1082, in send_message_await_response
+    [response] = await self.send_messages_await_response_complex(
+  File "aioesphomeapi/connection.py", line 1070, in send_messages_await_response_complex
+    raise TimeoutAPIError(msg) from err
+aioesphomeapi.core.TimeoutAPIError: Timeout waiting for DisconnectResponse after 10.0s
+sweep done

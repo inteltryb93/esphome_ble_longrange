@@ -1,0 +1,17 @@
+0: 1M 400/80 act, coded 400/300               coded=  4.0/min (3 samples) 1M= 206.6/min heap=101824
+1: 1M 400/30 act, coded 400/370               coded=  4.3/min (3 samples) 1M=  90.0/min heap=101784
+2: 1M 1000/50 act, coded 1000/950             coded=  5.7/min (3 samples) 1M=  65.0/min heap=101805
+3: 1M 400/30 act, coded 100/95                coded=  7.0/min (3 samples) 1M=  40.7/min heap=101804
+4: 1M 400/30 act, coded 400/370, coex BT      coded=  7.0/min (3 samples) 1M= 100.7/min heap=101804
+5: 1M 400/30 passive, coded 400/370           coded=  5.0/min (3 samples) 1M=  54.0/min heap=101847
+6: 1M 4000/30 act, coded 4000/3900            coded=  6.0/min (3 samples) 1M=   5.7/min heap=101805
+7: 1M 400/30 act, coded 400/400               coded=  6.0/min (3 samples) 1M=  85.0/min heap=101804
+==== summary ====
+0: 1M 400/80 act, coded 400/300               coded=  4.0/min (3 samples) 1M= 206.6/min heap=101824
+1: 1M 400/30 act, coded 400/370               coded=  4.3/min (3 samples) 1M=  90.0/min heap=101784
+2: 1M 1000/50 act, coded 1000/950             coded=  5.7/min (3 samples) 1M=  65.0/min heap=101805
+3: 1M 400/30 act, coded 100/95                coded=  7.0/min (3 samples) 1M=  40.7/min heap=101804
+4: 1M 400/30 act, coded 400/370, coex BT      coded=  7.0/min (3 samples) 1M= 100.7/min heap=101804
+5: 1M 400/30 passive, coded 400/370           coded=  5.0/min (3 samples) 1M=  54.0/min heap=101847
+6: 1M 4000/30 act, coded 4000/3900            coded=  6.0/min (3 samples) 1M=   5.7/min heap=101805
+7: 1M 400/30 act, coded 400/400               coded=  6.0/min (3 samples) 1M=  85.0/min heap=101804
