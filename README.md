@@ -1,47 +1,49 @@
 # esphome_ble_longrange
 
-Komponent zewnętrzny ESPHome `ble_longrange_scanner`: **skan rozszerzony BLE 5.0 (LE 1M + LE Coded PHY / Long
-Range)** na ESP32-C3 (Bluedroid, ESP-IDF 5.5.5), dzięki któremu termometry Xiaomi LYWSD03MMC z firmware pvvx
-w trybie „BT5+ PHY + LE Long Range” (Advertising Extensions, Coded PHY S=8) są widoczne i dekodowane do encji
-Home Assistant (temperatura, wilgotność, bateria, napięcie, RSSI, PHY, „Long Range”). Standardowy
-`esp32_ble_tracker` (legacy scan) takich termometrów nie widzi. Termometry legacy są odbierane tym samym skanem
-(PHY 1M) i przekazywane do `esp32_ble_tracker` / `bluetooth_proxy`.
+ESPHome external component `ble_longrange_scanner`: **BLE 5.0 extended scanning (LE 1M + LE Coded PHY / Long
+Range)** on ESP32-C3 (Bluedroid, ESP-IDF 5.5.5). Xiaomi LYWSD03MMC thermometers running the pvvx firmware in
+"BT5+ PHY + LE Long Range" mode (Advertising Extensions, Coded PHY S=8) become visible again and are decoded into
+Home Assistant entities (temperature, humidity, battery, voltage, RSSI, PHY, "Long Range"). The stock
+`esp32_ble_tracker` (legacy scan) cannot see such thermometers. Legacy advertisers are received by the same scan
+(PHY 1M) and handed to `esp32_ble_tracker` / `bluetooth_proxy`.
 
 ```
-components/ble_longrange_scanner/   komponent (Python + C++), parser reklam (BTHome v2 / pvvx / atc1441 / Mi)
-examples/bluetooth_proxy_longrange.yaml   przykład: zwykłe Bluetooth proxy (tylko reklamy) + Long Range (source: github)
-examples/longrange_sensors.yaml           przykład: encje per termometr, statystyki, usługi API do strojenia
-yaml/bluetooth_proxy_lr.yaml        moja konfiguracja laboratoryjna (source: local) – to samo co przykład proxy
-yaml/ble_longrange.yaml             moja konfiguracja diagnostyczna (source: local)
-docs/research.md                    ustalenia z kodu ESPHome / ESP-IDF / pvvx (z odwołaniami do linii)
-docs/architecture.md                co reużyto z ESPHome, co napisano od zera, przepływ danych, ograniczenia
-docs/test_report.md                 wyniki na prawdziwym sprzęcie (logi w logs/)
-docs/facts.md, docs/test_plan.md    zebrane fakty źródłowe (pvvx / ESP-IDF / ESPHome) i plan testów
-scripts/capture.sh                  zapis logu z API na N s + podsumowanie (scripts/analyze_log.py)
-scripts/ha_entities.py              lista encji i stanów przez natywne API (to, co widzi HA)
-scripts/sweep.py, sweep_coded.py    przegląd parametrów skanu w locie (usługi API set_scan / set_coex), 1M+Coded / tylko Coded
-scripts/proxy_check.py              strumień surowych reklam bluetooth_proxy (to, co dostaje integracja Bluetooth HA)
-scripts/stability_poll.sh           odpytywanie encji diagnostycznych co 5 min (test stabilności)
-scripts/set_longrange.sh            włączenie LR przez API flashera (termometr w legacy) / reset_longrange.sh: powrót
+components/ble_longrange_scanner/        the component (Python + C++), advertisement parser (BTHome v2 / pvvx / atc1441 / Mi)
+examples/bluetooth_proxy_longrange.yaml  example: plain Bluetooth proxy (advertisements only) + Long Range (source: github)
+examples/longrange_sensors.yaml          example: per-thermometer entities, statistics, api actions for tuning
+yaml/bluetooth_proxy_lr.yaml             my lab config (source: local) – same as the proxy example
+yaml/ble_longrange.yaml                  my diagnostic lab config (source: local)
+docs/research.md                         findings from the ESPHome / ESP-IDF / pvvx sources (with line references)
+docs/architecture.md                     what is reused from ESPHome, what was written from scratch, data flow, limits
+docs/test_report.md                      results on real hardware (logs in logs/)
+docs/facts.md, docs/test_plan.md         collected source facts (pvvx / ESP-IDF / ESPHome) and the test plan
+scripts/capture.sh                       capture the API log for N s + summary (scripts/analyze_log.py)
+scripts/ha_entities.py                   list entities and states over the native API (what HA sees)
+scripts/sweep.py, sweep_coded.py         runtime scan-parameter sweep (api actions set_scan / set_coex), 1M+Coded / Coded only
+scripts/proxy_check.py                   bluetooth_proxy raw-advertisement stream (what HA's Bluetooth integration gets)
+scripts/stability_poll.sh                poll the diagnostic entities every 5 min (stability test)
+scripts/nowifi_sweep.py, nowifi_analyze.py, ab_agc.sh   no-WiFi measurements over USB serial
+scripts/set_longrange.sh                 enable LR through the flasher API (thermometer in legacy mode) / reset_longrange.sh: revert
 ```
 
-## Jak to działa (skrót)
+## How it works (short)
 
-* ESPHome nigdy nie kolejkuje `ESP_GAP_BLE_EXT_ADV_REPORT_EVT`, a jego handler GAP jest chroniony. Komponent
-  pobiera dotychczasowy callback (`esp_ble_gap_get_callback()`), rejestruje własny i **łańcuchuje** wszystko,
-  czego sam nie obsługuje, do ESPHome – bez zmian w `/home/mateusz/esphome`.
-* W zadaniu BT raport jest kopiowany do puli (23 × 268 B) i kolejki lock-free; pętla główna dekoduje, publikuje
-  encje i (opcjonalnie) podaje ramkę trackerowi jako `BLEScanResult` (`gap_scan_event_handler`), z czego korzysta
-  `bluetooth_proxy` i wszystkie platformy sensorów BLE ESPHome.
-* Jeden ciągły ext scan (`esp_ble_gap_set_ext_scan_params` z maską 1M|Coded, `esp_ble_gap_start_ext_scan(0,0)`),
-  watchdog braku raportów, ponowienia z backoffem, scalanie fragmentów i legacy ADV+SCAN_RSP.
-* sdkconfig: `CONFIG_BT_BLE_50_FEATURES_SUPPORTED=y`, `CONFIG_BT_BLE_50_EXTEND_SCAN_EN=y` (ESPHome domyślnie
-  wyłącza 5.0); BLE 4.2 zostaje włączone, żeby tracker/klient nadal się kompilowały.
+* ESPHome never queues `ESP_GAP_BLE_EXT_ADV_REPORT_EVT` and its GAP handler is protected. The component takes the
+  current callback (`esp_ble_gap_get_callback()`), registers its own and **chains** everything it does not handle
+  itself to ESPHome – no changes to the ESPHome checkout.
+* In the BT task each report is copied into a pool (23 × 268 B) and a lock-free queue; the main loop decodes,
+  publishes entities and (optionally) hands the frame to the tracker as a `BLEScanResult`
+  (`gap_scan_event_handler`), which is what `bluetooth_proxy` and every ESPHome BLE sensor platform consume.
+* One continuous extended scan (`esp_ble_gap_set_ext_scan_params` with mask 1M|Coded,
+  `esp_ble_gap_start_ext_scan(0,0)`), a no-report watchdog, retries with backoff, fragment reassembly and
+  legacy ADV+SCAN_RSP merging.
+* sdkconfig: `CONFIG_BT_BLE_50_FEATURES_SUPPORTED=y`, `CONFIG_BT_BLE_50_EXTEND_SCAN_EN=y` (ESPHome turns 5.0 off by
+  default); BLE 4.2 stays enabled so the tracker/client still compile.
 
-## Konfiguracja – tryb Bluetooth proxy (`examples/bluetooth_proxy_longrange.yaml`)
+## Configuration – Bluetooth proxy mode (`examples/bluetooth_proxy_longrange.yaml`)
 
-Dokładnie jak zwykłe proxy ESPHome (`esp32_ble_tracker` + `bluetooth_proxy: active: false`) plus blok
-`ble_longrange_scanner:`:
+Exactly like a regular ESPHome proxy (`esp32_ble_tracker` + `bluetooth_proxy: active: false`) plus the
+`ble_longrange_scanner:` block:
 
 ```yaml
 external_components:
@@ -57,42 +59,42 @@ esp32_ble_tracker:
     active: true
 
 bluetooth_proxy:
-  active: false               # tylko reklamy (połączenia GATT nie działają obok ext scanu)
+  active: false               # advertisements only (GATT connections cannot run next to the extended scan)
 
-ble_longrange_scanner:        # podmienia skan legacy trackera na ext scan 1M + Coded PHY
+ble_longrange_scanner:        # replaces the tracker's legacy scan with an extended scan on 1M + Coded PHY
   scan_parameters:
     interval: 400ms
-    window: 20ms              # 1M: małe okno, urządzenia legacy nadal widoczne
+    window: 20ms              # 1M: small window, legacy devices stay visible
     coded_interval: 400ms
-    coded_window: 380ms       # Coded: okno ≈ interwał (zmierzone optimum)
+    coded_window: 380ms       # Coded: window ≈ interval (measured optimum)
 ```
 
-Wymagania: ESP32-C3/S3/C6/C5/H2 (kontroler BLE 5.0; klasyczny ESP32 i S2 mają tylko BLE 4.2 – konfiguracja jest
-odrzucana z czytelnym błędem), framework `esp-idf`, ESPHome 2026.1+.
+Requirements: ESP32-C3/S3/C6/C5/H2 (BLE 5.0 controller; the classic ESP32 and the S2 are BLE 4.2 only – the
+configuration is rejected with a clear error), framework `esp-idf`, ESPHome 2026.1+.
 
-W Home Assistant urządzenie wygląda i zachowuje się jak każde Bluetooth proxy: zero encji, stan skanera RUNNING,
-tryb pasywny/aktywny sterowany z HA, reklamy (legacy i Coded PHY) trafiają do integracji Bluetooth / BTHome.
-Wywołania `esp_ble_gap_set_scan_params/start_scanning/stop_scanning` trackera są przekierowane na etapie
-linkowania (`-Wl,--wrap`) do komponentu, który emuluje zdarzenia zakończenia – tracker „myśli”, że skanuje,
-a jedynym prawdziwym skanem jest rozszerzony (kontroler C3 nie pozwala na oba naraz).
+In Home Assistant the device looks and behaves like any Bluetooth proxy: no entities, scanner state RUNNING,
+passive/active mode driven from HA, advertisements (legacy and Coded PHY) delivered to the Bluetooth / BTHome
+integrations. The tracker's `esp_ble_gap_set_scan_params/start_scanning/stop_scanning` calls are redirected at
+link time (`-Wl,--wrap`) to the component, which emulates the completion events – the tracker "thinks" it scans
+while the extended scan is the only real one (the C3 controller does not allow both at once).
 
-Opcje komponentu (wszystkie opcjonalne):
+Component options (all optional):
 
 ```yaml
 ble_longrange_scanner:
   scan_parameters:
     interval: 400ms           # LE 1M
     window: 80ms
-    active: true              # nadpisywane przez tryb trackera/HA (proxy active: false -> pasywny)
+    active: true              # overridden by the tracker/HA mode (proxy active: false -> passive)
     coded_interval: 400ms     # LE Coded
     coded_window: 300ms
-    phy: both                 # both | 1m | coded  – "coded": tylko Long Range, bez urządzeń legacy
-  report_timeout: 120s        # brak raportów -> restart skanu
-  stats_interval: 60s         # linia statystyk w logu (INFO)
-  forward_to_tracker: true    # raporty -> tracker -> bluetooth_proxy / platformy sensorów BLE
-  coex_prefer_bt: true        # esp_coex_preference_set(ESP_COEX_PREFER_BT): +60 % odbioru Coded
+    phy: both                 # both | 1m | coded  – "coded": Long Range only, no legacy devices
+  report_timeout: 120s        # no reports -> restart the scan
+  stats_interval: 60s         # statistics line in the log (INFO)
+  forward_to_tracker: true    # reports -> tracker -> bluetooth_proxy / BLE sensor platforms
+  coex_prefer_bt: true        # esp_coex_preference_set(ESP_COEX_PREFER_BT): +60 % Coded reception with WiFi on
   log_unknown_devices: false
-  # wariant diagnostyczny (yaml/ble_longrange.yaml): encje per termometr i statystyki
+  # diagnostic variant (examples/longrange_sensors.yaml): per-thermometer entities and statistics
   reports_1m: {name: BLE Reports 1M}
   reports_coded: {name: BLE Reports Coded}
   free_heap: {name: Free Heap}
@@ -100,53 +102,53 @@ ble_longrange_scanner:
   scanning: {name: Scanning}
   devices:
     - mac_address: "A4:C1:38:4A:E8:8C"
-      name: Living Room       # encje: <name> Temperature/Humidity/Battery/Battery Voltage/RSSI/Packet Counter,
-                              #        <name> PHY, <name> Advertising Format (text), <name> Long Range (binary)
-      packet_counter: false   # dowolną encję można wyłączyć (false) albo nadpisać (name/filters/...)
+      name: Living Room       # entities: <name> Temperature/Humidity/Battery/Battery Voltage/RSSI/Packet Counter,
+                              #           <name> PHY, <name> Advertising Format (text), <name> Long Range (binary)
+      packet_counter: false   # any entity can be disabled (false) or overridden (name/filters/...)
 ```
 
-## Build / flash / testy
+## Build / flash / tests
 
 ```bash
-ESPHOME=/home/mateusz/xiaomi_esp_flasher/.venv/bin/esphome        # edytowalna instalacja checkoutu 2026.10.0-dev
+ESPHOME=/home/mateusz/xiaomi_esp_flasher/.venv/bin/esphome        # editable install of the 2026.10.0-dev checkout
 cd /home/mateusz/esphome_ble_longrange
 $ESPHOME compile yaml/bluetooth_proxy_lr.yaml
-$ESPHOME run --no-logs --device 192.168.0.102 yaml/bluetooth_proxy_lr.yaml   # OTA (albo --device /dev/ttyACM1)
+$ESPHOME run --no-logs --device 192.168.0.102 yaml/bluetooth_proxy_lr.yaml   # OTA (or --device /dev/ttyACM1)
 /home/mateusz/xiaomi_esp_flasher/.venv/bin/python scripts/proxy_check.py 192.168.0.102 120 A4:C1:38:4A:E8:8C
-scripts/capture.sh 300 run                                              # log VERY_VERBOSE 5 min + statystyki
+scripts/capture.sh 300 run                                              # VERY_VERBOSE log for 5 min + statistics
 /home/mateusz/xiaomi_esp_flasher/.venv/bin/python scripts/ha_entities.py 192.168.0.102 10
-/home/mateusz/xiaomi_esp_flasher/.venv/bin/python scripts/sweep.py 192.168.0.102 3   # strojenie okien skanu
+/home/mateusz/xiaomi_esp_flasher/.venv/bin/python scripts/sweep.py 192.168.0.102 3   # scan-window tuning
 ```
 
-Powrót do flashera: `cd /home/mateusz/xiaomi_esp_flasher && scripts/flash_esp.sh`.
+Back to the flasher firmware: `cd /home/mateusz/xiaomi_esp_flasher && scripts/flash_esp.sh`.
 
-**Uwaga (dotyczy każdego proxy ESPHome):** `bluetooth_proxy` ma jedno miejsce subskrybenta reklam – „najnowszy
-wygrywa”. `scripts/proxy_check.py` (albo inny klient `aioesphomeapi` subskrybujący reklamy) odbiera je Home
-Assistantowi, a HA nie zapisuje się ponownie samo: encje BTHome zamierają do restartu ESP32 (ponowny upload
-firmware / odłączenie zasilania). Nie uruchamiaj tego skryptu, gdy HA jest połączone, albo zrestartuj potem ESP32.
+**Note (applies to every ESPHome proxy):** `bluetooth_proxy` has a single advertisement subscriber slot – "newest
+wins". `scripts/proxy_check.py` (or any other `aioesphomeapi` client subscribing to advertisements) takes it away
+from Home Assistant and HA does not re-subscribe by itself: the BTHome entities freeze until the ESP32 reboots
+(re-upload the firmware / power cycle). Do not run that script while HA is connected, or reboot the ESP32 afterwards.
 
 ## Home Assistant
 
-Urządzenie `bluetooth-proxy-lr` (API, mDNS) pojawia się w HA jako wykryta integracja ESPHome: *Ustawienia →
-Urządzenia i usługi → Wykryte → ESPHome „bluetooth-proxy-lr” → Konfiguruj*. Po dodaniu HA używa go jako
-Bluetooth proxy: termometr w trybie Long Range pojawia się w integracji BTHome tak jak każdy inny (identyczne
-dane BTHome v2, adres publiczny).
+The device `bluetooth-proxy-lr` (API, mDNS) shows up in HA as a discovered ESPHome integration: *Settings →
+Devices & services → Discovered → ESPHome "bluetooth-proxy-lr" → Configure*. Once added, HA uses it as a
+Bluetooth proxy: the Long Range thermometer appears in the BTHome integration like any other (identical BTHome v2
+data, public address).
 
-## Powrót termometru z Long Range do legacy
+## Reverting a thermometer from Long Range to legacy
 
-Flaga LR nie jest zapisywana trwale: **wyjęcie i włożenie baterii** przywraca BT 4.2 (pvvx README l. 138).
-Alternatywnie komenda `0xDD` (CMD_ID_LR_RESET) albo `0x56` (defaults) na charakterystyce 0x1F1F przez połączenie
-Coded PHY (nRF Connect na telefonie z BT5; ten komponent nie nawiązuje połączeń). Potem
-`scripts/set_longrange.sh <ip-flashera> <MAC>` włącza LR ponownie (wymaga firmware flashera na ESP32).
+The LR flag is not persisted: **removing and re-inserting the battery** restores BT 4.2 (pvvx README line 138).
+Alternatively command `0xDD` (CMD_ID_LR_RESET) or `0x56` (defaults) on characteristic 0x1F1F over a Coded-PHY
+connection (nRF Connect on a BT5 phone; this component does not open connections). Afterwards
+`scripts/set_longrange.sh <flasher-ip> <MAC>` enables LR again (requires the flasher firmware on the ESP32).
 
-## Odbiór pakietów Long Range – co go ogranicza
+## Long Range reception – what limits it
 
-Zmierzone (`docs/test_report.md` §5, §8d, §8e): przy dobrym sygnale (termometr blisko, bez WiFi) firmware odbiera
-**98–100 %** zdarzeń reklamowych Coded – host, kolejka i Bluedroid nic nie gubią. Przy słabym sygnale
-(−85…−95 dBm) odbiór spada do 50–70 % bez WiFi i 18–30 % z WiFi + HA: straty to zaniki poniżej czułości Coded S8
-(−104 dBm) oraz czas radia zabierany przez WiFi. Parametry skanu są już optymalne (okno Coded = interwał, 1M 20 ms
-albo `phy: coded`); opcje kontrolera (AGC recorrect, flow control, TLIM) nie zmieniają wyniku. Co realnie pomaga:
-lepsze położenie/antena ESP32, większa moc nadawania termometru (pvvx `rf_tx_power`, do +10 dBm), mniej ruchu WiFi,
-drugie proxy bliżej termometru.
+Measured (`docs/test_report.md` §5, §8d, §8e): with a good signal (thermometer close, WiFi off) the firmware
+receives **98–100 %** of the Coded advertising events – host, queue and Bluedroid lose nothing. With a weak signal
+(−85…−95 dBm) reception drops to 50–70 % without WiFi and 18–30 % with WiFi + HA: the losses are fades below the
+Coded-S8 sensitivity (−104 dBm) and radio time taken by WiFi. The scan parameters are already optimal (Coded
+window = interval, 1M 20 ms or `phy: coded`); controller options (AGC recorrect, flow control, TLIM) do not change
+the result. What really helps: better ESP32 placement/antenna, higher thermometer TX power (pvvx `rf_tx_power`,
+up to +10 dBm), less WiFi traffic, a second proxy closer to the thermometer.
 
-Wyniki pomiarów, ograniczenia i statystyki odbioru: `docs/test_report.md`.
+Measurements, limitations and reception statistics: `docs/test_report.md`.

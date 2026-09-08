@@ -1,75 +1,76 @@
-# Architektura komponentu `ble_longrange_scanner`
+# Architecture of the `ble_longrange_scanner` component
 
-## Co jest reużyte z ESPHome
+## What is reused from ESPHome
 
-| Potrzeba | ESPHome | Uwagi |
+| Need | ESPHome | Notes |
 |---|---|---|
-| Kontroler + Bluedroid, cykl życia stosu | `esp32_ble` (`ESP32BLE`, `Parented`) | komponent czeka w `loop()` aż `parent->is_active()`; przy `disable()`/`enable()` stosu ponownie się podpina (Bluedroid po re-init ma znów callback ESPHome). |
-| Kolejka zdarzeń BT-task → main loop | `esphome/core/event_pool.h` + `lock_free_queue.h` | identyczny wzorzec jak `ESP32BLE::ble_events_`; własna pula 24 slotów × ~270 B (raport ext ma do 251 B danych, `BLEEvent` ESPHome ich nie mieści). |
-| Encje HA | `sensor`, `text_sensor`, `binary_sensor` | tworzone w Pythonie z listy `devices:`; domyślne nazwy `<name> Temperature` itd. |
-| Adres MAC / logowanie | `format_mac_addr_upper`, `ESP_LOGx` | tagi `ble_lr` (`ble_lr.scan`, `ble_lr.dev`). |
-| Zgodność z resztą ekosystemu BLE (`bluetooth_proxy`, platformy sensorów, triggery) | `esp32_ble_tracker::gap_scan_event_handler(const BLEScanResult&)` (publiczne) | **forwarding**: każdy raport ext (legacy 1M i Coded) o długości ≤ 62 B jest zamieniany na `BLEScanResult` i podany trackerowi, który dalej sam obsługuje listenerów i proxy. **Emulacja skanu trackera**: jego wywołania `esp_ble_gap_set_scan_params/start_scanning/stop_scanning` są przekierowane linkerem (`-Wl,--wrap`) do komponentu, który z pętli głównej dostarcza trackerowi syntetyczne `SCAN_PARAM_SET/START/STOP_COMPLETE` (status 0) przez publiczne `gap_event_handler()` oraz `ESP_GAP_SEARCH_INQ_CMPL_EVT` po `duration` – tracker przechodzi normalnie IDLE→STARTING→RUNNING→IDLE, `bluetooth_proxy` raportuje HA stan RUNNING i tryb, a `active/passive` trackera (z YAML albo z HA) steruje częścią 1M ext scanu. Zmierzone: kontroler C3 odrzuca (status 12, Command Disallowed) ext scan gdy trwa legacy i odwrotnie. |
-| sdkconfig | `esp32.add_idf_sdkconfig_option` | `CONFIG_BT_BLE_50_FEATURES_SUPPORTED=y`, `CONFIG_BT_BLE_50_EXTEND_SCAN_EN=y`; BLE 4.2 zostaje `y` (domyślne ESPHome) żeby tracker/klient nadal się kompilowały. |
+| Controller + Bluedroid, stack life cycle | `esp32_ble` (`ESP32BLE`, `Parented`) | the component waits in `loop()` until `parent->is_active()`; on stack `disable()`/`enable()` it re-hooks (after a re-init Bluedroid has ESPHome's callback again). |
+| BT-task → main-loop event queue | `esphome/core/event_pool.h` + `lock_free_queue.h` | same pattern as `ESP32BLE::ble_events_`; own pool of 24 slots × ~270 B (an extended report carries up to 251 B of data, ESPHome's `BLEEvent` cannot hold it). |
+| HA entities | `sensor`, `text_sensor`, `binary_sensor` | created in Python from the `devices:` list; default names `<name> Temperature` etc. |
+| MAC formatting / logging | `format_mac_addr_upper`, `ESP_LOGx` | tags `ble_lr` (`ble_lr.scan`, `ble_lr.dev`). |
+| Compatibility with the rest of the BLE ecosystem (`bluetooth_proxy`, sensor platforms, triggers) | `esp32_ble_tracker::gap_scan_event_handler(const BLEScanResult&)` (public) | **forwarding**: every extended report (legacy 1M and Coded) up to 62 B is converted into a `BLEScanResult` and handed to the tracker, which then serves listeners and the proxy itself. **Tracker scan emulation**: its `esp_ble_gap_set_scan_params/start_scanning/stop_scanning` calls are redirected by the linker (`-Wl,--wrap`) to the component, which delivers synthetic `SCAN_PARAM_SET/START/STOP_COMPLETE` (status 0) through the public `gap_event_handler()` from the main loop, plus `ESP_GAP_SEARCH_INQ_CMPL_EVT` after `duration` – the tracker cycles IDLE→STARTING→RUNNING→IDLE normally, `bluetooth_proxy` reports RUNNING and the mode to HA, and the tracker's `active/passive` (YAML or HA) drives the 1M part of the extended scan. Measured: the C3 controller rejects (status 12, Command Disallowed) an extended scan while a legacy one runs and vice versa. |
+| sdkconfig | `esp32.add_idf_sdkconfig_option` | `CONFIG_BT_BLE_50_FEATURES_SUPPORTED=y`, `CONFIG_BT_BLE_50_EXTEND_SCAN_EN=y`; BLE 4.2 stays `y` (ESPHome default) so the tracker/client still compile. |
 
-## Co jest napisane od zera i dlaczego
+## What was written from scratch and why
 
-1. **Przechwycenie callbacku GAP** (`ble_longrange_scanner.cpp: gap_callback_`): ESPHome nie kolejkuje
-   `ESP_GAP_BLE_EXT_ADV_REPORT_EVT` ani `*_EXT_SCAN_*_COMPLETE_EVT` (patrz `docs/research.md` §1.1), a jego
-   `gap_event_handler` jest chroniony. Komponent robi `prev = esp_ble_gap_get_callback();
-   esp_ble_gap_register_callback(own)`; własny callback (kontekst BTC) obsługuje 5 zdarzeń ext scan (kopia do puli
-   + push do kolejki), wszystko inne oddaje do `prev` – ESPHome nie widzi różnicy. Zero zmian w
-   `/home/mateusz/esphome`.
-2. **Maszyna stanów ext scan**: `IDLE → HOOKED → PARAMS_SET(wait) → STARTING(wait) → RUNNING`, błędy → `FAILED`
-   z ponowieniem po 5 s (backoff do 60 s); `duration=0, period=0` = skan ciągły (bez cyklicznego restartu jak w
-   trackerze). Watchdog: brak raportów przez `report_timeout` (domyślnie 120 s) → `stop_ext_scan` → restart.
-3. **Parametry**: `cfg_mask = 1M | Coded`; 1M: aktywny/pasywny wg YAML, Coded: pasywny (pvvx w LR nie jest
-   scannable, nazwa jest w AUX_ADV_IND); interval/window osobno per PHY (domyślnie 1M 400/80 ms, Coded 400/300 ms –
-   suma okien < interval, bo kontroler przeplata PHY); `scan_duplicate = DISABLE`, `filter_policy = ALLOW_ALL`,
+1. **GAP callback hook** (`ble_longrange_scanner.cpp: gap_callback_`): ESPHome queues neither
+   `ESP_GAP_BLE_EXT_ADV_REPORT_EVT` nor `*_EXT_SCAN_*_COMPLETE_EVT` (see `docs/research.md` §1.1) and its
+   `gap_event_handler` is protected. The component does `prev = esp_ble_gap_get_callback();
+   esp_ble_gap_register_callback(own)`; the own callback (BTC context) handles the 5 extended-scan events (copy into
+   the pool + push into the queue) and passes everything else to `prev` – ESPHome sees no difference. Zero changes
+   in the ESPHome checkout.
+2. **Extended-scan state machine**: `IDLE → HOOKED → PARAMS_SET(wait) → STARTING(wait) → RUNNING`, errors → `FAILED`
+   with a retry after 5 s (backoff up to 60 s); `duration=0, period=0` = continuous scan (no periodic restart as in
+   the tracker). Watchdog: no reports for `report_timeout` (default 120 s) → `stop_ext_scan` → restart.
+3. **Parameters**: `cfg_mask = 1M | Coded` (or one PHY via `phy:`); 1M: active/passive per YAML / tracker, Coded:
+   passive (pvvx in LR is not scannable, the name is inside the AUX_ADV_IND); interval/window per PHY
+   (default 1M 400/80 ms, Coded 400/300 ms); `scan_duplicate = DISABLE`, `filter_policy = ALLOW_ALL`,
    `own_addr_type = PUBLIC`.
-4. **Scalanie fragmentów** (`data_status = incomplete`) per adres+SID (2 sloty × 251 B) i **scalanie legacy ADV +
-   SCAN_RSP** (adv scannable trzymany ≤ 300 ms, jak `scan_response_merger.h` dla rp2/bk72xx, którego esp32 nie
-   kompiluje) – dzięki temu tracker/proxy dostają jedną ramkę jak z natywnego skanu 4.2.
-5. **Parser reklam** (`adv_parser.*`, bez alokacji): AD-structures → flags/nazwa/service data; formaty BTHome v2
-   (0xFCD2), pvvx custom (0x181A/15 B), atc1441 (0x181A/13 B), Mi (0xFE95) – port z
+4. **Fragment reassembly** (`data_status = incomplete`) per address+SID (2 slots × 251 B) and **legacy ADV +
+   SCAN_RSP merging** (a scannable adv is held ≤ 300 ms, like `scan_response_merger.h` does for rp2/bk72xx, which
+   esp32 does not compile) – so the tracker/proxy get one frame just like from a native 4.2 scan.
+5. **Advertisement parser** (`adv_parser.*`, no allocations): AD structures → flags/name/service data; formats
+   BTHome v2 (0xFCD2), pvvx custom (0x181A/15 B), atc1441 (0x181A/13 B), Mi (0xFE95) – ported from
    `xiaomi_esp_flasher/xiaomi_device.cpp: parse_advertisement()`.
-6. **Urządzenia i encje**: tablica `Device{mac, name, sensors…, stats}`; na każdy raport z dopasowanym MAC:
-   publikacja temperatury/wilgotności/baterii/napięcia/RSSI/licznika pakietów, `text_sensor` PHY
-   („1M”, „2M”, „Coded”), `binary_sensor` Long Range (primary PHY = Coded), `text_sensor` format. Liczniki
-   per urządzenie (legacy/coded) do statystyk odbioru.
-7. **Emulacja skanu legacy trackera** (`__wrap_esp_ble_gap_*` w `ble_longrange_scanner.cpp`, flagi linkera w
-   `__init__.py`): jedyni wywołujący te API w buildzie ESPHome to `esp32_ble_tracker`; `__real_*` pozostają
-   dostępne (użyte, gdy komponent nie jest jeszcze zainicjalizowany). Dzięki temu YAML jest identyczny ze
-   zwykłym Bluetooth proxy (bez `continuous: false`).
-8. **Strojenie w locie**: `set_scan_ms()` / `set_coex_prefer_bt()` / `restart_scan()` wystawione w YAML jako
-   `api: actions:` (`set_scan`, `set_coex`, `restart_scan`) – `scripts/sweep.py` przełącza parametry przez
-   natywne API i czyta sensory `reports_1m` / `reports_coded`, bez reflashowania i bez strumienia logów (ruch WiFi
-   zaburza pomiar przez koegzystencję). Opcja `coex_prefer_bt` ustawia `esp_coex_preference_set(ESP_COEX_PREFER_BT)`
-   (ten sam mechanizm, którego `esp32_ble_tracker` używa na czas połączeń GATT).
-9. **Statystyki i diagnostyka** (`ble_lr` INFO co `stats_interval`, domyślnie 60 s): raporty/min per PHY,
-   dropy kolejki, restarty skanu, wolna sterta / min sterta, `esp_reset_reason()`. Opcjonalne encje globalne:
-   `reports_1m`, `reports_coded`, `free_heap`, `scanner_state`.
+6. **Devices and entities**: table `Device{mac, name, sensors…, stats}`; for every report with a matching MAC:
+   publish temperature/humidity/battery/voltage/RSSI/packet counter, `text_sensor` PHY ("1M", "2M", "Coded"),
+   `binary_sensor` Long Range (primary PHY = Coded), `text_sensor` format. Per-device counters (legacy/coded) for
+   the reception statistics.
+7. **Tracker legacy-scan emulation** (`__wrap_esp_ble_gap_*` in `ble_longrange_scanner.cpp`, linker flags in
+   `__init__.py`): the only callers of these APIs in an ESPHome build are in `esp32_ble_tracker`; `__real_*`
+   remain reachable (used when the component is not initialised yet). This keeps the YAML identical to a plain
+   Bluetooth proxy (no `continuous: false`).
+8. **Runtime tuning**: `set_scan_ms()` / `set_coex_prefer_bt()` / `restart_scan()` exposed in YAML as
+   `api: actions:` (`set_scan`, `set_coex`, `restart_scan`) – `scripts/sweep.py` switches parameters over the
+   native API and reads the `reports_1m` / `reports_coded` sensors, without re-flashing and without streaming logs
+   (WiFi traffic disturbs the measurement through coexistence). The `coex_prefer_bt` option sets
+   `esp_coex_preference_set(ESP_COEX_PREFER_BT)` (the mechanism `esp32_ble_tracker` uses during GATT connections).
+9. **Statistics and diagnostics** (`ble_lr` INFO every `stats_interval`, default 60 s): reports/min per PHY, queue
+   drops, scan restarts, free / minimum heap, `esp_reset_reason()`. Optional global entities: `reports_1m`,
+   `reports_coded`, `free_heap`, `scanner_state`.
 
-## Przepływ danych
+## Data flow
 
 ```
-kontroler C3 ─HCI LE Ext Adv Report─▶ Bluedroid (btu → btm → btc) ─▶ gap_callback_ [BTC task]
+C3 controller ─HCI LE Ext Adv Report─▶ Bluedroid (btu → btm → btc) ─▶ gap_callback_ [BTC task]
    ├─ ext scan events  → EventPool/LockFreeQueue ─▶ loop() [main]
-   └─ pozostałe        → ESP32BLE::gap_event_handler (oryginalny) → kolejka ESPHome
-loop(): pop → (fragmenty) → (merge scan rsp) → handle_report_()
-   ├─ Device match → adv_parser → sensor::publish_state … (HA przez api)
-   └─ tracker_ → gap_scan_event_handler(BLEScanResult) → listenery / bluetooth_proxy → HA raw adv
+   └─ everything else  → ESP32BLE::gap_event_handler (original) → ESPHome queue
+loop(): pop → (fragments) → (scan rsp merge) → handle_report_()
+   ├─ Device match → adv_parser → sensor::publish_state … (HA through api)
+   └─ tracker_ → gap_scan_event_handler(BLEScanResult) → listeners / bluetooth_proxy → HA raw adv
 ```
 
-## Ograniczenia zmierzone (docs/test_report.md §5)
-* Odbiór reklam Coded PHY: 5–8 z 24 zdarzeń/min (22–35 %) niezależnie od okien 1M/Coded, także w trybie
-  `phy: coded` (bez 1M) i przy 100 % okna Coded; `coex_prefer_bt` daje +60 % przy identycznych oknach w trybie
-  1M+Coded. Sufit ≈ 1/3 odpowiada skanerowi nasłuchującemu na jednym kanale primary na interwał przy adwerterze
-  wysyłającym ADV_EXT_IND (Coded) skutecznie na jednym kanale na zdarzenie – host nie gubi nic (`dropped=0`).
+## Measured limitations (docs/test_report.md §5, §8d, §8e)
+* Coded-PHY reception: 5–8 of 24 events/min (22–35 %) with WiFi on, 50–70 % without WiFi at −85…−95 dBm,
+  98–100 % with a strong signal – the losses are RF fades below the Coded-S8 sensitivity and radio time taken by
+  WiFi coexistence; the host loses nothing (`dropped=0`). `coex_prefer_bt` gives +60 % at identical windows with
+  WiFi on; the Coded window should equal the interval; a 20 ms 1M window costs nothing.
 
-## Ograniczenia znane z góry
-* Raporty > 62 B nie są przekazywane do trackera/proxy (limit `BLEScanResult`/`BluetoothLERawAdvertisement`);
-  encje własne działają dla pełnych 251 B.
-* Po użyciu ext scan kontroler odrzuca komendy legacy: `ble_client`/`bluetooth_proxy` z aktywnymi połączeniami
-  (`esp_ble_gattc_open` = legacy create connection) nie są wspierane w tym buildzie; `bluetooth_proxy` tylko w
-  trybie `active: false` (same reklamy). Połączenie w LR wymagałoby `esp_ble_gattc_aux_open()` (bonus).
-* Coded S2 vs S8 nie jest rozróżniane bez `CONFIG_BT_BLE_FEAT_ADV_CODING_SELECTION` (pvvx nadaje S8).
+## Known limitations
+* Reports longer than 62 B are not forwarded to the tracker/proxy (`BLEScanResult` / `BluetoothLERawAdvertisement`
+  limit); the component's own entities work for the full 251 B.
+* After the extended scan is in use the controller refuses legacy commands: `ble_client` / `bluetooth_proxy` with
+  active connections (`esp_ble_gattc_open` = legacy create connection) are not supported in this build;
+  `bluetooth_proxy` only with `active: false` (advertisements). A connection in LR would need
+  `esp_ble_gattc_aux_open()`.
+* Coded S2 vs S8 is not distinguished without `CONFIG_BT_BLE_FEAT_ADV_CODING_SELECTION` (pvvx transmits S8).
