@@ -1,0 +1,9 @@
+yaml/secrets.yaml
+examples/secrets.yaml
+yaml/.esphome/
+examples/.esphome/
+.esphome/
+.venv/
+logs/*.log
+__pycache__/
+*.pyc
