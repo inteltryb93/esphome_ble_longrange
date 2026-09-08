@@ -1,0 +1,118 @@
+# ESP32-C3 BLE 5.0 Long Range (Coded PHY) scanner with per-thermometer entities, statistics and tuning actions.
+# Replace the MAC addresses/names with your thermometers; copy secrets.yaml.example to secrets.yaml.
+substitutions:
+  name: esp-ble-longrange
+  friendly_name: ESP BLE Long Range
+
+esphome:
+  name: ${name}
+  friendly_name: ${friendly_name}
+  min_version: 2026.1.0
+
+external_components:
+  - source: github://inteltryb93/esphome_ble_longrange
+    components: [ble_longrange_scanner]
+
+esp32:
+  board: esp32-c3-devkitm-1
+  framework:
+    type: esp-idf
+    sdkconfig_options:
+      # Set by the component as well; kept here so the intent is visible in the YAML.
+      CONFIG_BT_BLE_50_FEATURES_SUPPORTED: "y"
+      CONFIG_BT_BLE_50_EXTEND_SCAN_EN: "y"
+
+logger:
+  # Maximum level for the project's own tags; the BLE stack tags stay at DEBUG (global VERY_VERBOSE starves the C3).
+  level: DEBUG
+  logs:
+    esp32_ble: DEBUG
+    esp32_ble_tracker: DEBUG
+    bluetooth_proxy: DEBUG
+    wifi: DEBUG
+    api: DEBUG
+    api.connection: DEBUG
+    api.service: DEBUG
+    scheduler: DEBUG
+    sensor: DEBUG
+    text_sensor: DEBUG
+    binary_sensor: DEBUG
+    mdns: DEBUG
+    component: DEBUG
+
+api:
+  actions:
+    # Tuning helpers (scripts/sweep.py): change the scan parameters / coexistence preference at runtime.
+    - action: set_scan
+      variables:
+        interval_1m: int
+        window_1m: int
+        active_1m: bool
+        interval_coded: int
+        window_coded: int
+        phy_mask: int          # 1 = LE 1M only, 2 = Coded only, 3 = both
+      then:
+        - lambda: id(lr_scanner).set_scan_ms(interval_1m, window_1m, active_1m, interval_coded, window_coded, phy_mask);
+    - action: set_coex
+      variables:
+        prefer_bt: bool
+      then:
+        - lambda: id(lr_scanner).set_coex_prefer_bt(prefer_bt);
+    - action: restart_scan
+      then:
+        - lambda: id(lr_scanner).restart_scan();
+
+ota:
+  - platform: esphome
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  power_save_mode: none
+
+esp32_ble:
+  max_connections: 1
+
+# Diagnostic variant (per-device entities, statistics, api actions). For the plain proxy use bluetooth_proxy_lr.yaml.
+# The tracker's legacy scan is emulated by ble_longrange_scanner (link-time wrap), so no special settings are needed.
+esp32_ble_tracker:
+  scan_parameters:
+    active: true
+
+# Phase 2: raw advertisements (legacy 1M and Coded PHY alike) are forwarded through the tracker to Home Assistant's
+# Bluetooth integration (BTHome etc.). Advertisement-only: GATT connections use legacy HCI commands that the
+# controller refuses once extended scanning is in use.
+bluetooth_proxy:
+  active: false
+
+ble_longrange_scanner:
+  id: lr_scanner
+  scan_parameters:
+    interval: 400ms        # LE 1M (legacy advertisers)
+    window: 60ms
+    active: true
+    coded_interval: 400ms  # LE Coded (Long Range)
+    coded_window: 370ms
+    phy: both              # both | 1m | coded  (coded = Long Range only, no legacy advertisers)
+  report_timeout: 120s
+  stats_interval: 60s
+  forward_to_tracker: true
+  log_unknown_devices: true
+  coex_prefer_bt: true   # +60 % Coded reports at identical windows (docs/test_report.md §5)
+  reports_1m:
+    name: BLE Reports 1M
+  reports_coded:
+    name: BLE Reports Coded
+  free_heap:
+    name: Free Heap
+  scanner_state:
+    name: Scanner State
+  scanning:
+    name: Scanning
+  devices:
+    - mac_address: "A4:C1:38:4A:E8:8C"
+      name: Living Room
+    - mac_address: "A4:C1:38:0B:5F:4E"
+      name: P2Kuchnia
+    - mac_address: "A4:C1:38:B8:31:E8"
+      name: P3Sypialni

@@ -1,0 +1,73 @@
+# Round 3: controller RX options (AGC recorrect for Coded PHY, no adv-report flow control). Sweep of scan settings with WiFi OFF: WiFi is on at boot (api action set_scan / nowifi_test), the nowifi_test
+# action disables WiFi for N seconds and re-enables it. Log over USB Serial/JTAG; scripts/nowifi_sweep.py drives it.
+substitutions:
+  name: bluetooth-proxy-lr
+  friendly_name: Bluetooth Proxy LR
+esphome:
+  name: ${name}
+  friendly_name: ${friendly_name}
+external_components:
+  - source: {type: local, path: ../components}
+    components: [ble_longrange_scanner]
+esp32:
+  board: esp32-c3-devkitm-1
+  framework:
+    type: esp-idf
+    sdkconfig_options:
+      CONFIG_BT_CTRL_AGC_RECORRECT_EN: "y"          # HW AGC recorrect (uncoded)
+      CONFIG_BT_CTRL_CODED_AGC_RECORRECT_EN: "y"    # HW AGC recorrect for Coded PHY
+      CONFIG_BT_CTRL_BLE_ADV_REPORT_FLOW_CTRL_SUPP: "n"  # no controller-side report discards
+logger:
+  level: VERY_VERBOSE
+  hardware_uart: USB_SERIAL_JTAG
+  logs:
+    esp32_ble: DEBUG
+    esp32_ble_tracker: DEBUG
+    bluetooth_proxy: DEBUG
+    wifi: DEBUG
+    api: DEBUG
+    api.connection: DEBUG
+    api.service: DEBUG
+    scheduler: DEBUG
+    component: DEBUG
+    mdns: DEBUG
+api:
+  actions:
+    - action: set_scan
+      variables:
+        interval_1m: int
+        window_1m: int
+        active_1m: bool
+        interval_coded: int
+        window_coded: int
+        phy_mask: int
+      then:
+        - lambda: id(lr_scanner).set_scan_ms(interval_1m, window_1m, active_1m, interval_coded, window_coded, phy_mask);
+    - action: nowifi_test
+      variables:
+        label: string
+        seconds: int
+      then:
+        - logger.log:
+            format: "TEST START %s (%d s without WiFi)"
+            args: [label.c_str(), seconds]
+        - wifi.disable:
+        - delay: !lambda return seconds * 1000;
+        - logger.log:
+            format: "TEST END %s"
+            args: [label.c_str()]
+        - wifi.enable:
+ota:
+  - platform: esphome
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  power_save_mode: none
+esp32_ble_tracker:
+  scan_parameters:
+    active: true
+bluetooth_proxy:
+  active: false
+ble_longrange_scanner:
+  id: lr_scanner
+  stats_interval: 30s

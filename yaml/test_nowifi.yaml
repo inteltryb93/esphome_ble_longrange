@@ -1,0 +1,48 @@
+# A/B test: extended scan with WiFi OFF for the first 5.5 minutes (log over USB Serial/JTAG), then WiFi ON.
+substitutions:
+  name: bluetooth-proxy-lr
+  friendly_name: Bluetooth Proxy LR
+esphome:
+  name: ${name}
+  friendly_name: ${friendly_name}
+  on_boot:
+    - priority: -100
+      then:
+        - logger.log: "TEST: WiFi disabled, extended scan only – 330 s"
+        - delay: 330s
+        - logger.log: "TEST: enabling WiFi now"
+        - wifi.enable:
+external_components:
+  - source: {type: local, path: ../components}
+    components: [ble_longrange_scanner]
+esp32:
+  board: esp32-c3-devkitm-1
+  framework: {type: esp-idf}
+logger:
+  level: VERY_VERBOSE
+  hardware_uart: USB_SERIAL_JTAG
+  logs:
+    esp32_ble: DEBUG
+    esp32_ble_tracker: DEBUG
+    bluetooth_proxy: DEBUG
+    wifi: DEBUG
+    api: DEBUG
+    api.connection: DEBUG
+    scheduler: DEBUG
+    component: DEBUG
+    mdns: DEBUG
+api:
+ota:
+  - platform: esphome
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  power_save_mode: none
+  enable_on_boot: false
+esp32_ble_tracker:
+  scan_parameters:
+    active: true
+bluetooth_proxy:
+  active: false
+ble_longrange_scanner:
+  stats_interval: 30s
